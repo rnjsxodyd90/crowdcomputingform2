@@ -57,6 +57,24 @@
             gap: 8px;
         }
 
+        .incident-box .incident-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-bottom: 15px;
+            padding-bottom: 15px;
+            border-bottom: 1px dashed #d4a900;
+        }
+
+        .incident-box .meta-item {
+            font-size: 14px;
+            color: #333;
+        }
+
+        .incident-box .meta-item strong {
+            color: #856404;
+        }
+
         .incident-box .incident-text {
             color: #333;
             font-size: 15px;
@@ -335,6 +353,11 @@
 
                 <div class="incident-box">
                     <h2>Incident Report #${incident.id}</h2>
+                    <div class="incident-meta">
+                        <div class="meta-item"><strong>Impact:</strong> ${incident.impact}</div>
+                        <div class="meta-item"><strong>Date:</strong> ${incident.date}</div>
+                        <div class="meta-item"><strong>Classification:</strong> ${incident.classification.join('; ')}</div>
+                    </div>
                     <div class="incident-text">${incident.description}</div>
                 </div>
 
