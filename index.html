@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Survey Question</title>
+    <title>Analyze and Categorize an AI Incident</title>
     <style>
         * {
             box-sizing: border-box;
@@ -13,64 +13,144 @@
 
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: #f0f2f5;
             min-height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
             padding: 20px;
         }
 
         .container {
-            background: white;
-            border-radius: 16px;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-            padding: 40px;
-            max-width: 500px;
-            width: 100%;
+            max-width: 800px;
+            margin: 0 auto;
         }
 
-        .question-number {
-            color: #667eea;
-            font-size: 14px;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            margin-bottom: 10px;
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 12px 12px 0 0;
         }
 
-        .question-text {
+        .header h1 {
             font-size: 24px;
+            margin-bottom: 15px;
+        }
+
+        .header p {
+            font-size: 14px;
+            line-height: 1.6;
+            opacity: 0.95;
+        }
+
+        .incident-box {
+            background: #fff3cd;
+            border: 1px solid #ffc107;
+            border-radius: 0;
+            padding: 25px;
+        }
+
+        .incident-box h2 {
+            color: #856404;
+            font-size: 16px;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .incident-box .incident-text {
             color: #333;
-            margin-bottom: 30px;
-            line-height: 1.4;
+            font-size: 15px;
+            line-height: 1.7;
+            white-space: pre-wrap;
+        }
+
+        .form-section {
+            background: white;
+            padding: 0;
+            border-radius: 0 0 12px 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .question {
+            padding: 25px 30px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .question:last-of-type {
+            border-bottom: none;
+        }
+
+        .question-label {
+            font-size: 15px;
+            color: #333;
+            margin-bottom: 15px;
+            font-weight: 500;
+        }
+
+        .question-label .required {
+            color: #e53935;
+            margin-left: 4px;
+        }
+
+        .question-label .multi-hint {
+            font-weight: normal;
+            color: #666;
+            font-size: 13px;
+        }
+
+        .text-input {
+            width: 100%;
+            padding: 12px 15px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 15px;
+            transition: border-color 0.2s;
+        }
+
+        .text-input:focus {
+            outline: none;
+            border-color: #667eea;
         }
 
         .options {
             display: flex;
             flex-direction: column;
-            gap: 12px;
+            gap: 10px;
         }
 
-        .option {
-            padding: 16px 20px;
-            border: 2px solid #e0e0e0;
-            border-radius: 10px;
+        .option-label {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 12px;
+            border: 1px solid #e0e0e0;
+            border-radius: 6px;
             cursor: pointer;
-            transition: all 0.2s ease;
-            font-size: 16px;
+            transition: all 0.2s;
+            font-size: 14px;
             color: #444;
         }
 
-        .option:hover {
-            border-color: #667eea;
+        .option-label:hover {
             background: #f8f9ff;
+            border-color: #667eea;
         }
 
-        .option.selected {
+        .option-label input {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+        }
+
+        .option-label.selected {
+            background: #f0f3ff;
             border-color: #667eea;
-            background: #667eea;
-            color: white;
+        }
+
+        .submit-section {
+            padding: 25px 30px;
+            background: #f9f9f9;
+            border-radius: 0 0 12px 12px;
         }
 
         .submit-btn {
@@ -79,12 +159,11 @@
             background: #667eea;
             color: white;
             border: none;
-            border-radius: 10px;
-            font-size: 18px;
+            border-radius: 8px;
+            font-size: 16px;
             font-weight: 600;
             cursor: pointer;
-            margin-top: 30px;
-            transition: background 0.2s ease;
+            transition: background 0.2s;
         }
 
         .submit-btn:hover {
@@ -96,89 +175,84 @@
             cursor: not-allowed;
         }
 
-        .message {
-            text-align: center;
-            padding: 40px 20px;
+        .error-msg {
+            color: #e53935;
+            font-size: 13px;
+            margin-top: 8px;
+            display: none;
         }
 
-        .message h2 {
+        .question.error .error-msg {
+            display: block;
+        }
+
+        .question.error .text-input,
+        .question.error .options {
+            border-color: #e53935;
+        }
+
+        .message-container {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            padding: 60px 40px;
+            text-align: center;
+        }
+
+        .message-container .icon {
+            font-size: 64px;
+            margin-bottom: 20px;
+        }
+
+        .message-container h2 {
             color: #333;
             margin-bottom: 15px;
         }
 
-        .message p {
+        .message-container p {
             color: #666;
-            font-size: 16px;
             line-height: 1.6;
         }
 
-        .success-icon {
-            font-size: 60px;
-            margin-bottom: 20px;
+        .progress-bar {
+            background: #e0e0e0;
+            height: 4px;
+            border-radius: 2px;
+            margin-top: 20px;
+            overflow: hidden;
         }
 
-        .share-link {
-            margin-top: 30px;
-            padding: 20px;
-            background: #f5f5f5;
-            border-radius: 10px;
-        }
-
-        .share-link label {
-            display: block;
-            font-size: 14px;
-            color: #666;
-            margin-bottom: 8px;
-        }
-
-        .share-link input {
-            width: 100%;
-            padding: 12px;
-            border: 1px solid #ddd;
-            border-radius: 6px;
-            font-size: 14px;
-        }
-
-        .copy-btn {
-            margin-top: 10px;
-            padding: 10px 20px;
+        .progress-bar .progress {
             background: #667eea;
-            color: white;
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 14px;
-        }
-
-        .copy-btn:hover {
-            background: #5a6fd6;
+            height: 100%;
+            width: 0%;
+            transition: width 0.3s;
         }
     </style>
 </head>
 <body>
     <div class="container" id="app">
-        <!-- Content will be loaded dynamically -->
+        <!-- Content loaded dynamically -->
     </div>
 
-    <script src="questions.js"></script>
+    <script src="incidents.js"></script>
     <script>
-        const STORAGE_KEY = 'survey_answered';
+        const STORAGE_KEY = 'ai_incident_survey_answered';
         const app = document.getElementById('app');
 
-        // Get question ID from URL parameter
-        function getQuestionIdFromUrl() {
+        // Get incident ID from URL parameter
+        function getIncidentIdFromUrl() {
             const params = new URLSearchParams(window.location.search);
-            const qId = params.get('q');
-            return qId ? parseInt(qId) : null;
+            const id = params.get('incident');
+            return id ? parseInt(id) : null;
         }
 
-        // Get next available question ID (round-robin based on total answered globally)
-        function getNextQuestionId() {
-            // Use a simple counter stored in localStorage to distribute questions
-            const counter = parseInt(localStorage.getItem('survey_counter') || '0');
-            const questionId = (counter % questions.length) + 1;
-            localStorage.setItem('survey_counter', (counter + 1).toString());
-            return questionId;
+        // Get next available incident ID (round-robin)
+        function getNextIncidentId() {
+            const counter = parseInt(localStorage.getItem('incident_counter') || '0');
+            const incidentId = (counter % incidents.length) + 1;
+            localStorage.setItem('incident_counter', (counter + 1).toString());
+            return incidentId;
         }
 
         // Check if user has already answered
@@ -186,79 +260,218 @@
             return localStorage.getItem(STORAGE_KEY) !== null;
         }
 
-        // Save answer
-        function saveAnswer(questionId, answer) {
+        // Save answers
+        function saveAnswers(incidentId, answers) {
             const data = {
-                questionId: questionId,
-                answer: answer,
+                incidentId: incidentId,
+                answers: answers,
                 timestamp: new Date().toISOString()
             };
             localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
         }
 
-        // Get the answered data
+        // Get answered data
         function getAnsweredData() {
             const data = localStorage.getItem(STORAGE_KEY);
             return data ? JSON.parse(data) : null;
         }
 
-        // Find question by ID
-        function findQuestion(id) {
-            return questions.find(q => q.id === id);
+        // Find incident by ID
+        function findIncident(id) {
+            return incidents.find(i => i.id === id);
         }
 
-        // Render question
-        function renderQuestion(question) {
+        // Render the form
+        function renderForm(incident) {
+            let questionsHtml = questions.map((q, idx) => {
+                let inputHtml = '';
+
+                if (q.type === 'text') {
+                    // Pre-fill incident number for question 1
+                    const prefillValue = q.id === 1 ? incident.id : '';
+                    const readonly = q.id === 1 ? 'readonly' : '';
+                    inputHtml = `<input type="text" class="text-input" name="q${q.id}" value="${prefillValue}" ${readonly}>`;
+                } else if (q.type === 'radio') {
+                    inputHtml = `<div class="options">
+                        ${q.options.map((opt, i) => `
+                            <label class="option-label">
+                                <input type="radio" name="q${q.id}" value="${opt}">
+                                <span>${opt}</span>
+                            </label>
+                        `).join('')}
+                    </div>`;
+                } else if (q.type === 'checkbox') {
+                    inputHtml = `<div class="options">
+                        ${q.options.map((opt, i) => `
+                            <label class="option-label">
+                                <input type="checkbox" name="q${q.id}" value="${opt}">
+                                <span>${opt}</span>
+                            </label>
+                        `).join('')}
+                    </div>`;
+                }
+
+                const multiHint = q.type === 'checkbox' ? '<span class="multi-hint"> (Multiple options allowed)</span>' : '';
+
+                return `
+                    <div class="question" data-question="${q.id}">
+                        <div class="question-label">
+                            ${idx + 1}. ${q.question}${multiHint}
+                            ${q.required ? '<span class="required">*</span>' : ''}
+                        </div>
+                        ${inputHtml}
+                        <div class="error-msg">This question is required</div>
+                    </div>
+                `;
+            }).join('');
+
             app.innerHTML = `
-                <div class="question-number">Question ${question.id} of ${questions.length}</div>
-                <h1 class="question-text">${question.question}</h1>
-                <div class="options">
-                    ${question.options.map((opt, idx) => `
-                        <div class="option" data-index="${idx}">${opt}</div>
-                    `).join('')}
+                <div class="header">
+                    <h1>Analyze and Categorize an AI Incident</h1>
+                    <p>Welcome to the AI incidents study. Thank you for taking the time to contribute!</p>
+                    <p style="margin-top: 10px;">Please read the incident description carefully and answer the questions based only on the information provided in the report. If the report does not contain enough information to answer a question confidently, select "Cannot be determined" rather than guessing.</p>
+                    <div class="progress-bar"><div class="progress" id="progress"></div></div>
                 </div>
-                <button class="submit-btn" disabled>Submit Answer</button>
+
+                <div class="incident-box">
+                    <h2>Incident Report #${incident.id}</h2>
+                    <div class="incident-text">${incident.description}</div>
+                </div>
+
+                <div class="form-section">
+                    ${questionsHtml}
+                    <div class="submit-section">
+                        <button class="submit-btn" id="submitBtn">Submit Answers</button>
+                    </div>
+                </div>
             `;
 
-            let selectedOption = null;
-            const options = app.querySelectorAll('.option');
-            const submitBtn = app.querySelector('.submit-btn');
+            // Add event listeners
+            setupFormListeners(incident);
+        }
 
-            options.forEach(opt => {
-                opt.addEventListener('click', () => {
-                    options.forEach(o => o.classList.remove('selected'));
-                    opt.classList.add('selected');
-                    selectedOption = parseInt(opt.dataset.index);
-                    submitBtn.disabled = false;
+        // Setup form event listeners
+        function setupFormListeners(incident) {
+            const submitBtn = document.getElementById('submitBtn');
+            const progressBar = document.getElementById('progress');
+
+            // Update progress and styling on input change
+            document.querySelectorAll('input').forEach(input => {
+                input.addEventListener('change', () => {
+                    updateProgress();
+
+                    // Update selected styling for options
+                    if (input.type === 'radio' || input.type === 'checkbox') {
+                        const optionLabels = input.closest('.options').querySelectorAll('.option-label');
+                        optionLabels.forEach(label => {
+                            const inp = label.querySelector('input');
+                            if (inp.type === 'radio') {
+                                label.classList.toggle('selected', inp.checked);
+                            } else {
+                                label.classList.toggle('selected', inp.checked);
+                            }
+                        });
+                    }
                 });
             });
 
+            // Submit handler
             submitBtn.addEventListener('click', () => {
-                if (selectedOption !== null) {
-                    const answer = question.options[selectedOption];
-                    saveAnswer(question.id, answer);
-                    renderThankYou(question, answer);
+                if (validateForm()) {
+                    const answers = collectAnswers();
+                    saveAnswers(incident.id, answers);
+                    renderThankYou();
                 }
             });
+
+            function updateProgress() {
+                const total = questions.length;
+                let answered = 0;
+
+                questions.forEach(q => {
+                    if (q.type === 'text') {
+                        const input = document.querySelector(`input[name="q${q.id}"]`);
+                        if (input && input.value.trim()) answered++;
+                    } else if (q.type === 'radio') {
+                        const checked = document.querySelector(`input[name="q${q.id}"]:checked`);
+                        if (checked) answered++;
+                    } else if (q.type === 'checkbox') {
+                        const checked = document.querySelectorAll(`input[name="q${q.id}"]:checked`);
+                        if (checked.length > 0) answered++;
+                    }
+                });
+
+                const percent = (answered / total) * 100;
+                progressBar.style.width = percent + '%';
+            }
+
+            function validateForm() {
+                let valid = true;
+
+                questions.forEach(q => {
+                    if (!q.required) return;
+
+                    const questionDiv = document.querySelector(`.question[data-question="${q.id}"]`);
+                    let hasAnswer = false;
+
+                    if (q.type === 'text') {
+                        const input = document.querySelector(`input[name="q${q.id}"]`);
+                        hasAnswer = input && input.value.trim() !== '';
+                    } else if (q.type === 'radio') {
+                        hasAnswer = document.querySelector(`input[name="q${q.id}"]:checked`) !== null;
+                    } else if (q.type === 'checkbox') {
+                        hasAnswer = document.querySelectorAll(`input[name="q${q.id}"]:checked`).length > 0;
+                    }
+
+                    if (!hasAnswer) {
+                        questionDiv.classList.add('error');
+                        valid = false;
+                    } else {
+                        questionDiv.classList.remove('error');
+                    }
+                });
+
+                if (!valid) {
+                    const firstError = document.querySelector('.question.error');
+                    if (firstError) {
+                        firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    }
+                }
+
+                return valid;
+            }
+
+            function collectAnswers() {
+                const answers = {};
+
+                questions.forEach(q => {
+                    if (q.type === 'text') {
+                        const input = document.querySelector(`input[name="q${q.id}"]`);
+                        answers[`q${q.id}`] = input ? input.value.trim() : '';
+                    } else if (q.type === 'radio') {
+                        const checked = document.querySelector(`input[name="q${q.id}"]:checked`);
+                        answers[`q${q.id}`] = checked ? checked.value : '';
+                    } else if (q.type === 'checkbox') {
+                        const checked = document.querySelectorAll(`input[name="q${q.id}"]:checked`);
+                        answers[`q${q.id}`] = Array.from(checked).map(c => c.value);
+                    }
+                });
+
+                return answers;
+            }
+
+            // Initial progress update
+            updateProgress();
         }
 
         // Render thank you message
-        function renderThankYou(question, answer) {
-            const baseUrl = window.location.origin + window.location.pathname;
-
+        function renderThankYou() {
             app.innerHTML = `
-                <div class="message">
-                    <div class="success-icon">&#10004;</div>
+                <div class="message-container">
+                    <div class="icon">&#10004;</div>
                     <h2>Thank You!</h2>
-                    <p>Your response has been recorded.</p>
-                    <p style="margin-top: 15px; font-size: 14px; color: #888;">
-                        You answered: <strong>${answer}</strong>
-                    </p>
-                </div>
-                <div class="share-link">
-                    <label>Share this survey with others:</label>
-                    <input type="text" id="shareUrl" readonly value="${baseUrl}">
-                    <button class="copy-btn" onclick="copyLink()">Copy Link</button>
+                    <p>Your response has been recorded successfully.</p>
+                    <p style="margin-top: 15px; color: #888;">Thank you for contributing to improving the understanding of real-world AI incidents.</p>
                 </div>
             `;
         }
@@ -266,16 +479,14 @@
         // Render already answered message
         function renderAlreadyAnswered() {
             const data = getAnsweredData();
-            const question = findQuestion(data.questionId);
 
             app.innerHTML = `
-                <div class="message">
-                    <div class="success-icon">&#128077;</div>
+                <div class="message-container">
+                    <div class="icon">&#128077;</div>
                     <h2>You've Already Participated</h2>
                     <p>Thank you for your previous response!</p>
-                    <p style="margin-top: 15px; font-size: 14px; color: #888;">
-                        Question: ${question ? question.question : 'N/A'}<br>
-                        Your answer: <strong>${data.answer}</strong>
+                    <p style="margin-top: 15px; color: #888;">
+                        You analyzed Incident #${data.incidentId} on ${new Date(data.timestamp).toLocaleDateString()}
                     </p>
                 </div>
             `;
@@ -284,55 +495,39 @@
         // Render error message
         function renderError(message) {
             app.innerHTML = `
-                <div class="message">
-                    <div class="success-icon">&#9888;</div>
+                <div class="message-container">
+                    <div class="icon">&#9888;</div>
                     <h2>Oops!</h2>
                     <p>${message}</p>
                 </div>
             `;
         }
 
-        // Copy link function
-        function copyLink() {
-            const input = document.getElementById('shareUrl');
-            input.select();
-            document.execCommand('copy');
-            const btn = document.querySelector('.copy-btn');
-            btn.textContent = 'Copied!';
-            setTimeout(() => btn.textContent = 'Copy Link', 2000);
-        }
-
         // Initialize
         function init() {
-            // Check if already answered
             if (hasAnswered()) {
                 renderAlreadyAnswered();
                 return;
             }
 
-            // Get question ID from URL or assign next one
-            let questionId = getQuestionIdFromUrl();
+            let incidentId = getIncidentIdFromUrl();
 
-            if (!questionId) {
-                // No question specified, assign next available
-                questionId = getNextQuestionId();
-                // Update URL without reloading
-                const newUrl = `${window.location.pathname}?q=${questionId}`;
+            if (!incidentId) {
+                incidentId = getNextIncidentId();
+                const newUrl = `${window.location.pathname}?incident=${incidentId}`;
                 window.history.replaceState({}, '', newUrl);
             }
 
-            // Find and render the question
-            const question = findQuestion(questionId);
+            const incident = findIncident(incidentId);
 
-            if (!question) {
-                renderError('Question not found. Please check the link.');
+            if (!incident) {
+                renderError('Incident not found. Please check the link.');
                 return;
             }
 
-            renderQuestion(question);
+            renderForm(incident);
         }
 
-        // Start the app
         init();
     </script>
 </body>
