@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Survey Question</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            padding: 40px;
+            max-width: 500px;
+            width: 100%;
+        }
+
+        .question-number {
+            color: #667eea;
+            font-size: 14px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 10px;
+        }
+
+        .question-text {
+            font-size: 24px;
+            color: #333;
+            margin-bottom: 30px;
+            line-height: 1.4;
+        }
+
+        .options {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .option {
+            padding: 16px 20px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-size: 16px;
+            color: #444;
+        }
+
+        .option:hover {
+            border-color: #667eea;
+            background: #f8f9ff;
+        }
+
+        .option.selected {
+            border-color: #667eea;
+            background: #667eea;
+            color: white;
+        }
+
+        .submit-btn {
+            width: 100%;
+            padding: 16px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 30px;
+            transition: background 0.2s ease;
+        }
+
+        .submit-btn:hover {
+            background: #5a6fd6;
+        }
+
+        .submit-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+
+        .message {
+            text-align: center;
+            padding: 40px 20px;
+        }
+
+        .message h2 {
+            color: #333;
+            margin-bottom: 15px;
+        }
+
+        .message p {
+            color: #666;
+            font-size: 16px;
+            line-height: 1.6;
+        }
+
+        .success-icon {
+            font-size: 60px;
+            margin-bottom: 20px;
+        }
+
+        .share-link {
+            margin-top: 30px;
+            padding: 20px;
+            background: #f5f5f5;
+            border-radius: 10px;
+        }
+
+        .share-link label {
+            display: block;
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 8px;
+        }
+
+        .share-link input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+
+        .copy-btn {
+            margin-top: 10px;
+            padding: 10px 20px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .copy-btn:hover {
+            background: #5a6fd6;
+        }
+    </style>
+</head>
+<body>
+    <div class="container" id="app">
+        <!-- Content will be loaded dynamically -->
+    </div>
+
+    <script src="questions.js"></script>
+    <script>
+        const STORAGE_KEY = 'survey_answered';
+        const app = document.getElementById('app');
+
+        // Get question ID from URL parameter
+        function getQuestionIdFromUrl() {
+            const params = new URLSearchParams(window.location.search);
+            const qId = params.get('q');
+            return qId ? parseInt(qId) : null;
+        }
+
+        // Get next available question ID (round-robin based on total answered globally)
+        function getNextQuestionId() {
+            // Use a simple counter stored in localStorage to distribute questions
+            const counter = parseInt(localStorage.getItem('survey_counter') || '0');
+            const questionId = (counter % questions.length) + 1;
+            localStorage.setItem('survey_counter', (counter + 1).toString());
+            return questionId;
+        }
+
+        // Check if user has already answered
+        function hasAnswered() {
+            return localStorage.getItem(STORAGE_KEY) !== null;
+        }
+
+        // Save answer
+        function saveAnswer(questionId, answer) {
+            const data = {
+                questionId: questionId,
+                answer: answer,
+                timestamp: new Date().toISOString()
+            };
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+        }
+
+        // Get the answered data
+        function getAnsweredData() {
+            const data = localStorage.getItem(STORAGE_KEY);
+            return data ? JSON.parse(data) : null;
+        }
+
+        // Find question by ID
+        function findQuestion(id) {
+            return questions.find(q => q.id === id);
+        }
+
+        // Render question
+        function renderQuestion(question) {
+            app.innerHTML = `
+                <div class="question-number">Question ${question.id} of ${questions.length}</div>
+                <h1 class="question-text">${question.question}</h1>
+                <div class="options">
+                    ${question.options.map((opt, idx) => `
+                        <div class="option" data-index="${idx}">${opt}</div>
+                    `).join('')}
+                </div>
+                <button class="submit-btn" disabled>Submit Answer</button>
+            `;
+
+            let selectedOption = null;
+            const options = app.querySelectorAll('.option');
+            const submitBtn = app.querySelector('.submit-btn');
+
+            options.forEach(opt => {
+                opt.addEventListener('click', () => {
+                    options.forEach(o => o.classList.remove('selected'));
+                    opt.classList.add('selected');
+                    selectedOption = parseInt(opt.dataset.index);
+                    submitBtn.disabled = false;
+                });
+            });
+
+            submitBtn.addEventListener('click', () => {
+                if (selectedOption !== null) {
+                    const answer = question.options[selectedOption];
+                    saveAnswer(question.id, answer);
+                    renderThankYou(question, answer);
+                }
+            });
+        }
+
+        // Render thank you message
+        function renderThankYou(question, answer) {
+            const baseUrl = window.location.origin + window.location.pathname;
+
+            app.innerHTML = `
+                <div class="message">
+                    <div class="success-icon">&#10004;</div>
+                    <h2>Thank You!</h2>
+                    <p>Your response has been recorded.</p>
+                    <p style="margin-top: 15px; font-size: 14px; color: #888;">
+                        You answered: <strong>${answer}</strong>
+                    </p>
+                </div>
+                <div class="share-link">
+                    <label>Share this survey with others:</label>
+                    <input type="text" id="shareUrl" readonly value="${baseUrl}">
+                    <button class="copy-btn" onclick="copyLink()">Copy Link</button>
+                </div>
+            `;
+        }
+
+        // Render already answered message
+        function renderAlreadyAnswered() {
+            const data = getAnsweredData();
+            const question = findQuestion(data.questionId);
+
+            app.innerHTML = `
+                <div class="message">
+                    <div class="success-icon">&#128077;</div>
+                    <h2>You've Already Participated</h2>
+                    <p>Thank you for your previous response!</p>
+                    <p style="margin-top: 15px; font-size: 14px; color: #888;">
+                        Question: ${question ? question.question : 'N/A'}<br>
+                        Your answer: <strong>${data.answer}</strong>
+                    </p>
+                </div>
+            `;
+        }
+
+        // Render error message
+        function renderError(message) {
+            app.innerHTML = `
+                <div class="message">
+                    <div class="success-icon">&#9888;</div>
+                    <h2>Oops!</h2>
+                    <p>${message}</p>
+                </div>
+            `;
+        }
+
+        // Copy link function
+        function copyLink() {
+            const input = document.getElementById('shareUrl');
+            input.select();
+            document.execCommand('copy');
+            const btn = document.querySelector('.copy-btn');
+            btn.textContent = 'Copied!';
+            setTimeout(() => btn.textContent = 'Copy Link', 2000);
+        }
+
+        // Initialize
+        function init() {
+            // Check if already answered
+            if (hasAnswered()) {
+                renderAlreadyAnswered();
+                return;
+            }
+
+            // Get question ID from URL or assign next one
+            let questionId = getQuestionIdFromUrl();
+
+            if (!questionId) {
+                // No question specified, assign next available
+                questionId = getNextQuestionId();
+                // Update URL without reloading
+                const newUrl = `${window.location.pathname}?q=${questionId}`;
+                window.history.replaceState({}, '', newUrl);
+            }
+
+            // Find and render the question
+            const question = findQuestion(questionId);
+
+            if (!question) {
+                renderError('Question not found. Please check the link.');
+                return;
+            }
+
+            renderQuestion(question);
+        }
+
+        // Start the app
+        init();
+    </script>
+</body>
+</html>
