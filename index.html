@@ -547,27 +547,89 @@
             `;
         }
 
+        // Render loading message
+        function renderLoading() {
+            app.innerHTML = `
+                <div class="message-container">
+                    <div class="icon">&#8987;</div>
+                    <h2>Loading...</h2>
+                    <p>Please wait while we prepare your survey.</p>
+                </div>
+            `;
+        }
+
+        // Render all incidents claimed message
+        function renderAllClaimed() {
+            app.innerHTML = `
+                <div class="message-container">
+                    <div class="icon">&#128275;</div>
+                    <h2>Survey Complete</h2>
+                    <p>All incidents have been assigned to participants.</p>
+                    <p style="margin-top: 15px; color: #888;">Thank you for your interest!</p>
+                </div>
+            `;
+        }
+
+        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbx_1yAT1702ToCvzKVl-ATYsyKUGdH2AH-LA-MKsSQ8c4zJqMW6q-Ab3gv5i08QUQrE/exec';
+        const TOKEN_KEY = 'ai_incident_user_token';
+
+        // Get or claim an incident from the server
+        async function getAssignedIncident() {
+            const existingToken = localStorage.getItem(TOKEN_KEY);
+            const url = existingToken
+                ? `${SCRIPT_URL}?token=${encodeURIComponent(existingToken)}`
+                : SCRIPT_URL;
+
+            try {
+                const response = await fetch(url);
+                const data = await response.json();
+
+                if (data.incidentId === null) {
+                    return { success: false, allClaimed: true };
+                }
+
+                // Save token if new one was issued
+                if (data.token) {
+                    localStorage.setItem(TOKEN_KEY, data.token);
+                }
+
+                return { success: true, incidentId: data.incidentId };
+            } catch (error) {
+                console.error('Error fetching incident:', error);
+                return { success: false, error: true };
+            }
+        }
+
         // Initialize
-        function init() {
+        async function init() {
             if (hasAnswered()) {
                 renderAlreadyAnswered();
                 return;
             }
 
-            let incidentId = getIncidentIdFromUrl();
+            renderLoading();
 
-            if (!incidentId) {
-                incidentId = getNextIncidentId();
-                const newUrl = `${window.location.pathname}?incident=${incidentId}`;
-                window.history.replaceState({}, '', newUrl);
-            }
+            const result = await getAssignedIncident();
 
-            const incident = findIncident(incidentId);
-
-            if (!incident) {
-                renderError('Incident not found. Please check the link.');
+            if (!result.success) {
+                if (result.allClaimed) {
+                    renderAllClaimed();
+                } else {
+                    renderError('Unable to load survey. Please try again later.');
+                }
                 return;
             }
+
+            const incident = findIncident(result.incidentId);
+
+            if (!incident) {
+                renderError('Incident not found. Please contact the administrator.');
+                return;
+            }
+
+            // Update URL to show incident number
+            const newUrl = `${window.location.pathname}?incident=${result.incidentId}`;
+            window.history.replaceState({}, '', newUrl);
 
             renderForm(incident);
         }
