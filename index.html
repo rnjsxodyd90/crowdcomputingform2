@@ -399,11 +399,32 @@
             });
 
             // Submit handler
-            submitBtn.addEventListener('click', () => {
+            submitBtn.addEventListener('click', async () => {
                 if (validateForm()) {
+                    submitBtn.disabled = true;
+                    submitBtn.textContent = 'Submitting...';
+
                     const answers = collectAnswers();
-                    saveAnswers(incident.id, answers);
-                    renderThankYou();
+
+                    try {
+                        // Send to Google Sheets
+                        await fetch('https://script.google.com/macros/s/AKfycbx_1yAT1702ToCvzKVl-ATYsyKUGdH2AH-LA-MKsSQ8c4zJqMW6q-Ab3gv5i08QUQrE/exec', {
+                            method: 'POST',
+                            mode: 'no-cors',
+                            headers: {
+                                'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify(answers)
+                        });
+
+                        saveAnswers(incident.id, answers);
+                        renderThankYou();
+                    } catch (error) {
+                        console.error('Error submitting:', error);
+                        submitBtn.disabled = false;
+                        submitBtn.textContent = 'Submit Answers';
+                        alert('Error submitting. Please try again.');
+                    }
                 }
             });
 
