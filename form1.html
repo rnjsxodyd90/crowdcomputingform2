@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Qualifying Quiz</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: #f0f2f5;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 12px 12px 0 0;
+        }
+
+        .header h1 {
+            font-size: 24px;
+            margin-bottom: 15px;
+        }
+
+        .header p {
+            font-size: 14px;
+            line-height: 1.6;
+            opacity: 0.95;
+        }
+
+        .form-section {
+            background: white;
+            padding: 0;
+            border-radius: 0 0 12px 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .question {
+            padding: 25px 30px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .question:last-of-type {
+            border-bottom: none;
+        }
+
+        .question-label {
+            font-size: 15px;
+            color: #333;
+            margin-bottom: 15px;
+            font-weight: 500;
+        }
+
+        .question-label .required {
+            color: #e53935;
+            margin-left: 4px;
+        }
+
+        .text-input {
+            width: 100%;
+            padding: 12px 15px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 15px;
+            transition: border-color 0.2s;
+        }
+
+        .text-input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .options {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .option-label {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 12px;
+            border: 1px solid #e0e0e0;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 14px;
+            color: #444;
+        }
+
+        .option-label:hover {
+            background: #f8f9ff;
+            border-color: #667eea;
+        }
+
+        .option-label input {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+        }
+
+        .option-label.selected {
+            background: #f0f3ff;
+            border-color: #667eea;
+        }
+
+        .submit-section {
+            padding: 25px 30px;
+            background: #f9f9f9;
+            border-radius: 0 0 12px 12px;
+        }
+
+        .submit-btn {
+            width: 100%;
+            padding: 16px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .submit-btn:hover {
+            background: #5a6fd6;
+        }
+
+        .submit-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+
+        .error-msg {
+            color: #e53935;
+            font-size: 13px;
+            margin-top: 8px;
+            display: none;
+        }
+
+        .question.error .error-msg {
+            display: block;
+        }
+
+        .question.error .text-input,
+        .question.error .options {
+            border-color: #e53935;
+        }
+
+        .message-container {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            padding: 60px 40px;
+            text-align: center;
+        }
+
+        .message-container .icon {
+            font-size: 64px;
+            margin-bottom: 20px;
+        }
+
+        .message-container h2 {
+            color: #333;
+            margin-bottom: 15px;
+        }
+
+        .message-container p {
+            color: #666;
+            line-height: 1.6;
+        }
+
+        .message-container.failed {
+            border-top: 4px solid #e53935;
+        }
+
+        .message-container.failed .icon {
+            color: #e53935;
+        }
+    </style>
+</head>
+<body>
+    <div class="container" id="app">
+        <!-- Content loaded dynamically -->
+    </div>
+
+    <script>
+        // ============================================
+        // CONFIGURATION - EDIT THIS SECTION
+        // ============================================
+        const CONFIG = {
+            // Where to redirect on success (Form 2 URL)
+            form2Url: "index.html",
+
+            // Quiz title and description
+            title: "Qualifying Quiz",
+            description: "Please answer all questions correctly to proceed to the main survey.",
+
+            // Your questions - ADD YOUR QUESTIONS HERE
+            questions: [
+                {
+                    id: 1,
+                    question: "Example question 1: What is 2 + 2?",
+                    type: "multiple-choice",  // "multiple-choice", "text", or "true-false"
+                    options: ["3", "4", "5", "6"],
+                    correct: "4"  // Must match exactly
+                },
+                {
+                    id: 2,
+                    question: "Example question 2: Is the sky blue?",
+                    type: "true-false",
+                    correct: "True"  // "True" or "False"
+                },
+                {
+                    id: 3,
+                    question: "Example question 3: Type the word 'hello'",
+                    type: "text",
+                    correct: "hello"  // Case-insensitive comparison
+                }
+                // Add more questions following the same format...
+            ]
+        };
+        // ============================================
+        // END CONFIGURATION
+        // ============================================
+
+        const STORAGE_KEY = 'qualifying_quiz_attempted';
+        const app = document.getElementById('app');
+
+        // Check if user has already attempted
+        function hasAttempted() {
+            return localStorage.getItem(STORAGE_KEY) !== null;
+        }
+
+        // Mark as attempted
+        function markAttempted(passed) {
+            const data = {
+                attempted: true,
+                passed: passed,
+                timestamp: new Date().toISOString()
+            };
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+        }
+
+        // Render the quiz form
+        function renderQuiz() {
+            let questionsHtml = CONFIG.questions.map((q, idx) => {
+                let inputHtml = '';
+
+                if (q.type === 'multiple-choice') {
+                    inputHtml = `<div class="options">
+                        ${q.options.map(opt => `
+                            <label class="option-label">
+                                <input type="radio" name="q${q.id}" value="${opt}">
+                                <span>${opt}</span>
+                            </label>
+                        `).join('')}
+                    </div>`;
+                } else if (q.type === 'true-false') {
+                    inputHtml = `<div class="options">
+                        <label class="option-label">
+                            <input type="radio" name="q${q.id}" value="True">
+                            <span>True</span>
+                        </label>
+                        <label class="option-label">
+                            <input type="radio" name="q${q.id}" value="False">
+                            <span>False</span>
+                        </label>
+                    </div>`;
+                } else if (q.type === 'text') {
+                    inputHtml = `<input type="text" class="text-input" name="q${q.id}" placeholder="Type your answer">`;
+                }
+
+                return `
+                    <div class="question" data-question="${q.id}">
+                        <div class="question-label">
+                            ${idx + 1}. ${q.question}
+                            <span class="required">*</span>
+                        </div>
+                        ${inputHtml}
+                        <div class="error-msg">Please answer this question</div>
+                    </div>
+                `;
+            }).join('');
+
+            app.innerHTML = `
+                <div class="header">
+                    <h1>${CONFIG.title}</h1>
+                    <p>${CONFIG.description}</p>
+                </div>
+
+                <div class="form-section">
+                    ${questionsHtml}
+                    <div class="submit-section">
+                        <button class="submit-btn" id="submitBtn">Submit</button>
+                    </div>
+                </div>
+            `;
+
+            setupFormListeners();
+        }
+
+        // Setup form event listeners
+        function setupFormListeners() {
+            const submitBtn = document.getElementById('submitBtn');
+
+            // Update selected styling on input change
+            document.querySelectorAll('input[type="radio"]').forEach(input => {
+                input.addEventListener('change', () => {
+                    const optionLabels = input.closest('.options').querySelectorAll('.option-label');
+                    optionLabels.forEach(label => {
+                        const inp = label.querySelector('input');
+                        label.classList.toggle('selected', inp.checked);
+                    });
+                });
+            });
+
+            // Submit handler
+            submitBtn.addEventListener('click', () => {
+                if (!validateForm()) {
+                    return;
+                }
+
+                submitBtn.disabled = true;
+                submitBtn.textContent = 'Checking...';
+
+                const allCorrect = checkAnswers();
+
+                if (allCorrect) {
+                    markAttempted(true);
+                    // Redirect to Form 2
+                    window.location.href = CONFIG.form2Url;
+                } else {
+                    markAttempted(false);
+                    renderFailed();
+                }
+            });
+        }
+
+        // Validate all questions are answered
+        function validateForm() {
+            let valid = true;
+
+            CONFIG.questions.forEach(q => {
+                const questionDiv = document.querySelector(`.question[data-question="${q.id}"]`);
+                let hasAnswer = false;
+
+                if (q.type === 'text') {
+                    const input = document.querySelector(`input[name="q${q.id}"]`);
+                    hasAnswer = input && input.value.trim() !== '';
+                } else {
+                    hasAnswer = document.querySelector(`input[name="q${q.id}"]:checked`) !== null;
+                }
+
+                if (!hasAnswer) {
+                    questionDiv.classList.add('error');
+                    valid = false;
+                } else {
+                    questionDiv.classList.remove('error');
+                }
+            });
+
+            if (!valid) {
+                const firstError = document.querySelector('.question.error');
+                if (firstError) {
+                    firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+            }
+
+            return valid;
+        }
+
+        // Check if all answers are correct
+        function checkAnswers() {
+            for (const q of CONFIG.questions) {
+                let userAnswer = '';
+
+                if (q.type === 'text') {
+                    const input = document.querySelector(`input[name="q${q.id}"]`);
+                    userAnswer = input ? input.value.trim().toLowerCase() : '';
+                    // Case-insensitive comparison for text
+                    if (userAnswer !== q.correct.toLowerCase()) {
+                        return false;
+                    }
+                } else {
+                    const checked = document.querySelector(`input[name="q${q.id}"]:checked`);
+                    userAnswer = checked ? checked.value : '';
+                    if (userAnswer !== q.correct) {
+                        return false;
+                    }
+                }
+            }
+            return true;
+        }
+
+        // Render failed message
+        function renderFailed() {
+            app.innerHTML = `
+                <div class="message-container failed">
+                    <div class="icon">&#10006;</div>
+                    <h2>Quiz Not Passed</h2>
+                    <p>Unfortunately, you did not answer all questions correctly.</p>
+                    <p style="margin-top: 15px; color: #888;">You cannot retake this quiz.</p>
+                </div>
+            `;
+        }
+
+        // Render already attempted message
+        function renderAlreadyAttempted() {
+            const data = JSON.parse(localStorage.getItem(STORAGE_KEY));
+
+            if (data.passed) {
+                // If they passed before, redirect them to Form 2
+                window.location.href = CONFIG.form2Url;
+                return;
+            }
+
+            app.innerHTML = `
+                <div class="message-container failed">
+                    <div class="icon">&#128683;</div>
+                    <h2>Already Attempted</h2>
+                    <p>You have already taken this quiz.</p>
+                    <p style="margin-top: 15px; color: #888;">
+                        Attempted on ${new Date(data.timestamp).toLocaleDateString()}
+                    </p>
+                </div>
+            `;
+        }
+
+        // Initialize
+        function init() {
+            if (hasAttempted()) {
+                renderAlreadyAttempted();
+                return;
+            }
+
+            renderQuiz();
+        }
+
+        init();
+    </script>
+</body>
+</html>
