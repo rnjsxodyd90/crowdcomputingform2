@@ -208,31 +208,134 @@
             form2Url: "index.html",
 
             // Quiz title and description
-            title: "Qualifying Quiz",
-            description: "Please answer all questions correctly to proceed to the main survey.",
+            title: "AI Literacy Quiz",
+            description: "Please answer the following questions about AI. If you get 6 or more correct, you will proceed to Form 2. If we think your answers on Form 2 are reasonable, you will receive a bonus payment on top of your base pay.",
 
-            // Your questions - ADD YOUR QUESTIONS HERE
+            // Minimum correct answers to pass
+            passingScore: 6,
+
+            // Your questions - AI Literacy Quiz (AILQ-LL)
             questions: [
                 {
                     id: 1,
-                    question: "Example question 1: What is 2 + 2?",
-                    type: "multiple-choice",  // "multiple-choice", "text", or "true-false"
-                    options: ["3", "4", "5", "6"],
-                    correct: "4"  // Must match exactly
+                    question: "What is Generative AI (GenAI)?",
+                    type: "multiple-choice",
+                    options: [
+                        "A specific programming language that is used to create learning materials",
+                        "A robotic system that can analyse and teach languages",
+                        "A type of AI technology that automatically generates content in response to prompts",
+                        "A database of intelligent machines that perform human tasks"
+                    ],
+                    correct: "A type of AI technology that automatically generates content in response to prompts"
                 },
                 {
                     id: 2,
-                    question: "Example question 2: Is the sky blue?",
-                    type: "true-false",
-                    correct: "True"  // "True" or "False"
+                    question: "What is Machine Learning (ML)?",
+                    type: "multiple-choice",
+                    options: [
+                        "A type of AI that is used in robotics",
+                        "A subset of AI that allows machines to learn from data without explicit programming",
+                        "A type of AI that is used in computers",
+                        "A technique that is used to understand and interpret human language"
+                    ],
+                    correct: "A subset of AI that allows machines to learn from data without explicit programming"
                 },
                 {
                     id: 3,
-                    question: "Example question 3: Type the word 'hello'",
-                    type: "text",
-                    correct: "hello"  // Case-insensitive comparison
+                    question: "What is Natural Language Processing (NLP)?",
+                    type: "multiple-choice",
+                    options: [
+                        "A type of AI that is used for image recognition and creation",
+                        "A programming language that is used for computer hardware and software",
+                        "A method for processing and memorising vocabulary",
+                        "A subfield of AI that enables computers to understand and generate human language"
+                    ],
+                    correct: "A subfield of AI that enables computers to understand and generate human language"
+                },
+                {
+                    id: 4,
+                    question: "What is the role of data in AI?",
+                    type: "multiple-choice",
+                    options: [
+                        "Creating hardware",
+                        "Training AI models",
+                        "Increasing storage space",
+                        "Reducing unsupervised learning"
+                    ],
+                    correct: "Training AI models"
+                },
+                {
+                    id: 5,
+                    question: "What is a potential ethical concern regarding the use of AI?",
+                    type: "multiple-choice",
+                    options: [
+                        "Bias in AI-generated content",
+                        "Lack of personalised learning experiences",
+                        "Insufficient number of AI tools",
+                        "Inefficiency in grading student work"
+                    ],
+                    correct: "Bias in AI-generated content"
+                },
+                {
+                    id: 6,
+                    question: "Which of the following does NOT need to be asked when evaluating an AI tool?",
+                    type: "multiple-choice",
+                    options: [
+                        "Purpose",
+                        "Accuracy",
+                        "Privacy",
+                        "Preservation"
+                    ],
+                    correct: "Preservation"
+                },
+                {
+                    id: 7,
+                    question: "Which of the following is NOT a common application of AI in education?",
+                    type: "multiple-choice",
+                    options: [
+                        "Virtual reality",
+                        "Physical textbook",
+                        "Automated transcription",
+                        "Quiz generator"
+                    ],
+                    correct: "Physical textbook"
+                },
+                {
+                    id: 8,
+                    question: "Which of the following is an example of an AI chatbot used in language learning?",
+                    type: "multiple-choice",
+                    options: [
+                        "A program that can provide interactive conversations and feedback",
+                        "A program that can play educational games",
+                        "A program that can track student progress and generate reports",
+                        "A program that can create a social media platform"
+                    ],
+                    correct: "A program that can provide interactive conversations and feedback"
+                },
+                {
+                    id: 9,
+                    question: "Which AI tool can be used for automated language translation?",
+                    type: "multiple-choice",
+                    options: [
+                        "Duolingo",
+                        "Canva",
+                        "Google Translate",
+                        "Education Copilot"
+                    ],
+                    correct: "Google Translate"
+                },
+                {
+                    id: 10,
+                    question: "Which of the following is NOT a key element of AI literacy?",
+                    type: "multiple-choice",
+                    options: [
+                        "How to use AI critically",
+                        "How to use AI effectively",
+                        "How to use AI ethically",
+                        "How to use AI secretly"
+                    ],
+                    correct: "How to use AI secretly"
                 }
-                // Add more questions following the same format...
             ]
         };
         // ============================================
@@ -248,10 +351,12 @@
         }
 
         // Mark as attempted
-        function markAttempted(passed) {
+        function markAttempted(passed, score) {
             const data = {
                 attempted: true,
                 passed: passed,
+                score: score,
+                total: CONFIG.questions.length,
                 timestamp: new Date().toISOString()
             };
             localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
@@ -339,15 +444,16 @@
                 submitBtn.disabled = true;
                 submitBtn.textContent = 'Checking...';
 
-                const allCorrect = checkAnswers();
+                const score = checkAnswers();
+                const passed = score >= CONFIG.passingScore;
 
-                if (allCorrect) {
-                    markAttempted(true);
+                if (passed) {
+                    markAttempted(true, score);
                     // Redirect to Form 2
                     window.location.href = CONFIG.form2Url;
                 } else {
-                    markAttempted(false);
-                    renderFailed();
+                    markAttempted(false, score);
+                    renderFailed(score);
                 }
             });
         }
@@ -385,36 +491,40 @@
             return valid;
         }
 
-        // Check if all answers are correct
+        // Count correct answers and return the score
         function checkAnswers() {
+            let correctCount = 0;
+
             for (const q of CONFIG.questions) {
                 let userAnswer = '';
+                let isCorrect = false;
 
                 if (q.type === 'text') {
                     const input = document.querySelector(`input[name="q${q.id}"]`);
                     userAnswer = input ? input.value.trim().toLowerCase() : '';
                     // Case-insensitive comparison for text
-                    if (userAnswer !== q.correct.toLowerCase()) {
-                        return false;
-                    }
+                    isCorrect = userAnswer === q.correct.toLowerCase();
                 } else {
                     const checked = document.querySelector(`input[name="q${q.id}"]:checked`);
                     userAnswer = checked ? checked.value : '';
-                    if (userAnswer !== q.correct) {
-                        return false;
-                    }
+                    isCorrect = userAnswer === q.correct;
+                }
+
+                if (isCorrect) {
+                    correctCount++;
                 }
             }
-            return true;
+            return correctCount;
         }
 
         // Render failed message
-        function renderFailed() {
+        function renderFailed(score) {
             app.innerHTML = `
                 <div class="message-container failed">
                     <div class="icon">&#10006;</div>
                     <h2>Quiz Not Passed</h2>
-                    <p>Unfortunately, you did not answer all questions correctly.</p>
+                    <p>Your score: <strong>${score}/${CONFIG.questions.length}</strong></p>
+                    <p>You needed at least ${CONFIG.passingScore} correct answers to pass.</p>
                     <p style="margin-top: 15px; color: #888;">You cannot retake this quiz.</p>
                 </div>
             `;
@@ -435,6 +545,7 @@
                     <div class="icon">&#128683;</div>
                     <h2>Already Attempted</h2>
                     <p>You have already taken this quiz.</p>
+                    <p>Your score: <strong>${data.score}/${data.total}</strong> (needed ${CONFIG.passingScore} to pass)</p>
                     <p style="margin-top: 15px; color: #888;">
                         Attempted on ${new Date(data.timestamp).toLocaleDateString()}
                     </p>
