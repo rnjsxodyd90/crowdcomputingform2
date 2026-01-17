@@ -345,6 +345,29 @@
         const STORAGE_KEY = 'qualifying_quiz_attempted';
         const app = document.getElementById('app');
 
+        // Get Prolific parameters from URL
+        function getProlificParams() {
+            const params = new URLSearchParams(window.location.search);
+            return {
+                visitorId: params.get('PROLIFIC_PID') || '',
+                studyId: params.get('STUDY_ID') || '',
+                sessionId: params.get('SESSION_ID') || ''
+            };
+        }
+
+        // Build URL with Prolific parameters
+        function buildForm2Url() {
+            const prolific = getProlificParams();
+            const params = new URLSearchParams();
+
+            if (prolific.visitorId) params.set('PROLIFIC_PID', prolific.visitorId);
+            if (prolific.studyId) params.set('STUDY_ID', prolific.studyId);
+            if (prolific.sessionId) params.set('SESSION_ID', prolific.sessionId);
+
+            const queryString = params.toString();
+            return queryString ? `${CONFIG.form2Url}?${queryString}` : CONFIG.form2Url;
+        }
+
         // Check if user has already attempted
         function hasAttempted() {
             return localStorage.getItem(STORAGE_KEY) !== null;
@@ -449,8 +472,8 @@
 
                 if (passed) {
                     markAttempted(true, score);
-                    // Redirect to Form 2
-                    window.location.href = CONFIG.form2Url;
+                    // Redirect to Form 2 with Prolific params
+                    window.location.href = buildForm2Url();
                 } else {
                     markAttempted(false, score);
                     renderFailed(score);
@@ -535,8 +558,8 @@
             const data = JSON.parse(localStorage.getItem(STORAGE_KEY));
 
             if (data.passed) {
-                // If they passed before, redirect them to Form 2
-                window.location.href = CONFIG.form2Url;
+                // If they passed before, redirect them to Form 2 with Prolific params
+                window.location.href = buildForm2Url();
                 return;
             }
 

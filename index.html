@@ -418,7 +418,9 @@
                         });
 
                         saveAnswers(incident.id, answers);
-                        renderThankYou();
+
+                        // Redirect to Prolific completion URL
+                        window.location.href = 'https://app.prolific.com/submissions/complete?cc=C1P4ALOM';
                     } catch (error) {
                         console.error('Error submitting:', error);
                         submitBtn.disabled = false;
@@ -487,6 +489,12 @@
 
             function collectAnswers() {
                 const answers = {};
+
+                // Include Prolific parameters
+                const prolific = getProlificParams();
+                answers.visitorId = prolific.visitorId;
+                answers.studyId = prolific.studyId;
+                answers.sessionId = prolific.sessionId;
 
                 questions.forEach(q => {
                     if (q.type === 'text') {
@@ -572,6 +580,16 @@
 
         const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbx_1yAT1702ToCvzKVl-ATYsyKUGdH2AH-LA-MKsSQ8c4zJqMW6q-Ab3gv5i08QUQrE/exec';
         const TOKEN_KEY = 'ai_incident_user_token';
+
+        // Get Prolific parameters from URL
+        function getProlificParams() {
+            const params = new URLSearchParams(window.location.search);
+            return {
+                visitorId: params.get('PROLIFIC_PID') || '',
+                studyId: params.get('STUDY_ID') || '',
+                sessionId: params.get('SESSION_ID') || ''
+            };
+        }
 
         // Get or claim an incident from the server
         async function getAssignedIncident() {
